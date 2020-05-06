@@ -165,6 +165,8 @@ public abstract class AbstractSendMessageProcessor extends AsyncNettyRequestProc
 
     protected RemotingCommand msgCheck(final ChannelHandlerContext ctx,
         final SendMessageRequestHeader requestHeader, final RemotingCommand response) {
+
+        // 检查 broker 是否有写入权限
         if (!PermName.isWriteable(this.brokerController.getBrokerConfig().getBrokerPermission())
             && this.brokerController.getTopicConfigManager().isOrderTopic(requestHeader.getTopic())) {
             response.setCode(ResponseCode.NO_PERMISSION);
@@ -176,7 +178,7 @@ public abstract class AbstractSendMessageProcessor extends AsyncNettyRequestProc
         if (!TopicValidator.validateTopic(requestHeader.getTopic(), response)) {
             return response;
         }
-
+        // 不能存在topicConfig，则进行创建
         TopicConfig topicConfig =
             this.brokerController.getTopicConfigManager().selectTopicConfig(requestHeader.getTopic());
         if (null == topicConfig) {
@@ -190,12 +192,14 @@ public abstract class AbstractSendMessageProcessor extends AsyncNettyRequestProc
             }
 
             log.warn("the topic {} not exist, producer: {}", requestHeader.getTopic(), ctx.channel().remoteAddress());
+            // 创建topic配置
             topicConfig = this.brokerController.getTopicConfigManager().createTopicInSendMessageMethod(
                 requestHeader.getTopic(),
                 requestHeader.getDefaultTopic(),
                 RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
                 requestHeader.getDefaultTopicQueueNums(), topicSysFlag);
 
+            // 如果没配置
             if (null == topicConfig) {
                 if (requestHeader.getTopic().startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
                     topicConfig =
@@ -215,6 +219,7 @@ public abstract class AbstractSendMessageProcessor extends AsyncNettyRequestProc
 
         int queueIdInt = requestHeader.getQueueId();
         int idValid = Math.max(topicConfig.getWriteQueueNums(), topicConfig.getReadQueueNums());
+        // 队列编号是否正确
         if (queueIdInt >= idValid) {
             String errorInfo = String.format("request queueId[%d] is illegal, %s Producer: %s",
                 queueIdInt,
