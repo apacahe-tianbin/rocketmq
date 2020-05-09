@@ -955,6 +955,7 @@ public class CommitLog {
 
     public void handleDiskFlush(AppendMessageResult result, PutMessageResult putMessageResult, MessageExt messageExt) {
         // Synchronization flush
+        // 同步刷盘
         if (FlushDiskType.SYNC_FLUSH == this.defaultMessageStore.getMessageStoreConfig().getFlushDiskType()) {
             final GroupCommitService service = (GroupCommitService) this.flushCommitLogService;
             if (messageExt.isWaitStoreMsgOK()) {
@@ -983,6 +984,10 @@ public class CommitLog {
                 // important：唤醒commitLog线程，进行flush
                 flushCommitLogService.wakeup();
             } else {
+
+                //    RocketMQ 会单独申请一个与目标物理文件（ commitlog)同样大小的堆外内存， 该堆外内存将使用内存锁定，确保不会被置换到虚拟内存中去，
+                //    消息首先追加到堆外内存，然后提交到与物理文件的内存映射内存中，再flush 到磁盘
+
                 commitLogService.wakeup();
             }
         }

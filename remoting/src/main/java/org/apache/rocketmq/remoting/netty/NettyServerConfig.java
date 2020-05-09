@@ -17,19 +17,29 @@
 package org.apache.rocketmq.remoting.netty;
 
 public class NettyServerConfig implements Cloneable {
+
+    //监控端口,默认初始化为9876
     private int listenPort = 8888;
     private int serverWorkerThreads = 8;
+    //pulic任务线程池个数
     private int serverCallbackExecutorThreads = 0;
+    //IO线程池个数
     private int serverSelectorThreads = 3;
+    //send oneway消息并发度(Broker端参数)
     private int serverOnewaySemaphoreValue = 256;
+    //异步消息发送最大并发度(Broker端参数)
     private int serverAsyncSemaphoreValue = 64;
+    //网络连接最大空闲时间 120s
     private int serverChannelMaxIdleTimeSeconds = 120;
-
+    //网络socket发送缓冲区大小
     private int serverSocketSndBufSize = NettySystemConfig.socketSndbufSize;
+    //网络socket接收缓冲区大小
     private int serverSocketRcvBufSize = NettySystemConfig.socketRcvbufSize;
+    //ByteBuffer是否开启缓存
     private boolean serverPooledByteBufAllocatorEnable = true;
 
     /**
+     * 是否启用Epoll IO模型，Linux建议开启
      * make make install
      *
      *

@@ -75,6 +75,8 @@ public class NamesrvController {
 
     public boolean initialize() {
 
+
+
         this.kvConfigManager.load();
 
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
@@ -84,6 +86,7 @@ public class NamesrvController {
 
         this.registerProcessor();
 
+        //10s一次扫描存活的Broker
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -92,6 +95,7 @@ public class NamesrvController {
             }
         }, 5, 10, TimeUnit.SECONDS);
 
+        //10s一次 打印KV配置
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
