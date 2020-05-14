@@ -25,6 +25,6 @@ public enum ConsumeFromWhere {
     CONSUME_FROM_MIN_OFFSET,
     @Deprecated
     CONSUME_FROM_MAX_OFFSET,
-    CONSUME_FROM_FIRST_OFFSET,
-    CONSUME_FROM_TIMESTAMP,
+    CONSUME_FROM_FIRST_OFFSET, //从队列当前最小偏移量开始消费
+    CONSUME_FROM_TIMESTAMP, //从消费者启动时间戳开始消费
 }

@@ -32,7 +32,9 @@ import java.util.concurrent.TimeUnit;
 
 public class TransactionProducer {
     public static void main(String[] args) throws MQClientException, InterruptedException {
+        // 也就是上文所说的，当RocketMQ发现`Prepared消息`时，会根据这个Listener实现的策略来决断事务
         TransactionListener transactionListener = new TransactionListenerImpl();
+        // 构造事务消息的生产者
         TransactionMQProducer producer = new TransactionMQProducer("please_rename_unique_group_name");
         ExecutorService executorService = new ThreadPoolExecutor(2, 5, 100, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2000), new ThreadFactory() {
             @Override
@@ -44,6 +46,7 @@ public class TransactionProducer {
         });
 
         producer.setExecutorService(executorService);
+        // 设置事务决断处理类
         producer.setTransactionListener(transactionListener);
         producer.start();
 
@@ -53,6 +56,7 @@ public class TransactionProducer {
                 Message msg =
                     new Message("TopicTest1234", tags[i % tags.length], "KEY" + i,
                         ("Hello RocketMQ " + i).getBytes(RemotingHelper.DEFAULT_CHARSET));
+                //发送消息
                 SendResult sendResult = producer.sendMessageInTransaction(msg, null);
                 System.out.printf("%s%n", sendResult);
 
