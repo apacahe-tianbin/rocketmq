@@ -160,6 +160,7 @@ public class MQClientInstance {
     }
 
     public static TopicPublishInfo topicRouteData2TopicPublishInfo(final String topic, final TopicRouteData route) {
+
         TopicPublishInfo info = new TopicPublishInfo();
         info.setTopicRouteData(route);
         if (route.getOrderTopicConf() != null && route.getOrderTopicConf().length() > 0) {
@@ -175,9 +176,11 @@ public class MQClientInstance {
 
             info.setOrderTopic(true);
         } else {
+
             List<QueueData> qds = route.getQueueDatas();
             Collections.sort(qds);
             for (QueueData qd : qds) {
+                //队列是否写权限
                 if (PermName.isWriteable(qd.getPerm())) {
                     BrokerData brokerData = null;
                     for (BrokerData bd : route.getBrokerDatas()) {
