@@ -93,6 +93,11 @@ public class BrokerFastFailure {
             .brokerController.getBrokerConfig().getWaitTimeMillsInTransactionQueue());
     }
 
+    /**
+     * Broker端快速失败机制
+     * @param blockingQueue
+     * @param maxWaitTimeMillsInQueue
+     */
     void cleanExpiredRequestInQueue(final BlockingQueue<Runnable> blockingQueue, final long maxWaitTimeMillsInQueue) {
         while (true) {
             try {
