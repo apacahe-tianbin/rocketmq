@@ -175,9 +175,11 @@ public abstract class AbstractSendMessageProcessor extends AsyncNettyRequestProc
             return response;
         }
 
+        //检查Topic是否可以进行消息发送
         if (!TopicValidator.validateTopic(requestHeader.getTopic(), response)) {
             return response;
         }
+
         // 不能存在topicConfig，则进行创建
         TopicConfig topicConfig =
             this.brokerController.getTopicConfigManager().selectTopicConfig(requestHeader.getTopic());

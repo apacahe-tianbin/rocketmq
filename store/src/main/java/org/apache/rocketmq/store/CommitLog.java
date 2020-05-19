@@ -391,23 +391,23 @@ public class CommitLog {
     protected static int calMsgLength(int sysFlag, int bodyLength, int topicLength, int propertiesLength) {
         int bornhostLength = (sysFlag & MessageSysFlag.BORNHOST_V6_FLAG) == 0 ? 8 : 20;
         int storehostAddressLength = (sysFlag & MessageSysFlag.STOREHOSTADDRESS_V6_FLAG) == 0 ? 8 : 20;
-        final int msgLen = 4 //TOTALSIZE
-            + 4 //MAGICCODE
-            + 4 //BODYCRC
-            + 4 //QUEUEID
-            + 4 //FLAG
-            + 8 //QUEUEOFFSET
-            + 8 //PHYSICALOFFSET
-            + 4 //SYSFLAG
-            + 8 //BORNTIMESTAMP
-            + bornhostLength //BORNHOST
-            + 8 //STORETIMESTAMP
-            + storehostAddressLength //STOREHOSTADDRESS
-            + 4 //RECONSUMETIMES
-            + 8 //Prepared Transaction Offset
-            + 4 + (bodyLength > 0 ? bodyLength : 0) //BODY
-            + 1 + topicLength //TOPIC
-            + 2 + (propertiesLength > 0 ? propertiesLength : 0) //propertiesLength
+        final int msgLen = 4 //TOTALSIZE  消息条目总长度
+            + 4 //MAGICCODE 魔数 4字节 默认值 0xdaa320a7
+            + 4 //BODYCRC 消息体CRC校验码
+            + 4 //QUEUEID 消息消费队列ID
+            + 4 //FLAG 消息Flag，RocketMQ不做处理，供应用程序使用
+            + 8 //QUEUEOFFSET  消息在消费队列的偏移量
+            + 8 //PHYSICALOFFSET 消息在CommitLog中偏移量
+            + 4 //SYSFLAG 消息系统Flag，例如是否压缩，是否事务消息等
+            + 8 //BORNTIMESTAMP 消息生产者调用调用消息发送API的时间戳
+            + bornhostLength //BORNHOST 消息发送者IP
+            + 8 //STORETIMESTAMP 消息存储时间戳
+            + storehostAddressLength //STOREHOSTADDRESS Broker服务器IP+端口号
+            + 4 //RECONSUMETIMES 消息重试次数
+            + 8 //Prepared Transaction Offset 事务消息物理偏移量
+            + 4 + (bodyLength > 0 ? bodyLength : 0) //BODY 消息体内容
+            + 1 + topicLength //TOPIC 主题存储长度
+            + 2 + (propertiesLength > 0 ? propertiesLength : 0) //propertiesLength 消息属性长度
             + 0;
         return msgLen;
     }

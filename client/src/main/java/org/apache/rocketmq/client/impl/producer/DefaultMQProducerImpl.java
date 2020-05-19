@@ -166,6 +166,10 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         }
     }
 
+    /**
+     * 注册消息发送钩子函数,则执行消息发送之前的逻辑
+     * @param hook
+     */
     public void registerSendMessageHook(final SendMessageHook hook) {
         this.sendMessageHookList.add(hook);
         log.info("register sendMessage Hook, {}", hook.hookName());
@@ -733,6 +737,20 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         }
     }
 
+    /**
+     *
+     * @param msg 消息内容
+     * @param mq MQ队列
+     * @param communicationMode 消息发送模式
+     * @param sendCallback 回调函数
+     * @param topicPublishInfo 主题路由信息
+     * @param timeout 消息发送超时时间
+     * @return
+     * @throws MQClientException
+     * @throws RemotingException
+     * @throws MQBrokerException
+     * @throws InterruptedException
+     */
     private SendResult sendKernelImpl(final Message msg,
         final MessageQueue mq,
         final CommunicationMode communicationMode,
@@ -745,6 +763,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         String brokerAddr = this.mQClientFactory.findBrokerAddressInPublish(mq.getBrokerName());
 
         if (null == brokerAddr) {
+            //NameServer主动更新Topic路由信息
             tryToFindTopicPublishInfo(mq.getTopic());
             brokerAddr = this.mQClientFactory.findBrokerAddressInPublish(mq.getBrokerName());
         }
@@ -796,6 +815,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                 }
 
                 // hook：发送消息前逻辑
+                // 如果有Hook函数
                 if (this.hasSendMessageHook()) {
                     context = new SendMessageContext();
                     context.setProducer(this);
