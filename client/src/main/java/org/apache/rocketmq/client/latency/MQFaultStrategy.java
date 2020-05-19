@@ -87,12 +87,16 @@ public class MQFaultStrategy {
                 // 获取 brokerName=lastBrokerName && 可用的一个消息队列
                 int index = tpInfo.getSendWhichQueue().getAndIncrement();
 
+                /**
+                 * 消息队列按照broker，序号排序
+                 */
                 for (int i = 0; i < tpInfo.getMessageQueueList().size(); i++) {
 
                     int pos = Math.abs(index++) % tpInfo.getMessageQueueList().size();
 
                     if (pos < 0)
                         pos = 0;
+
                     MessageQueue mq = tpInfo.getMessageQueueList().get(pos);
                     if (latencyFaultTolerance.isAvailable(mq.getBrokerName())) {
                         if (null == lastBrokerName || mq.getBrokerName().equals(lastBrokerName))

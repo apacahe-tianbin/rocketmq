@@ -72,7 +72,14 @@ public class TopicPublishInfo {
         this.haveTopicRouterInfo = haveTopicRouterInfo;
     }
 
+
+    /**
+     *
+     * @param lastBrokerName 上一次选择的执行发送消息失败的Broker
+     * @return
+     */
     public MessageQueue selectOneMessageQueue(final String lastBrokerName) {
+
         if (lastBrokerName == null) {
             return selectOneMessageQueue();
         } else {
@@ -90,6 +97,10 @@ public class TopicPublishInfo {
         }
     }
 
+    /**
+     * 规避上次MessageQueue所在的Broker
+     * @return
+     */
     public MessageQueue selectOneMessageQueue() {
         int index = this.sendWhichQueue.getAndIncrement();
         int pos = Math.abs(index) % this.messageQueueList.size();

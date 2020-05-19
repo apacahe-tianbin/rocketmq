@@ -36,6 +36,12 @@ public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> 
      */
     private final ThreadLocalIndex whichItemWorst = new ThreadLocalIndex();
 
+    /**
+     *
+     * @param name BrokerName
+     * @param currentLatency 消息发送故障延迟时间
+     * @param notAvailableDuration 不可用时长，在这个时间内，Broker将被规避
+     */
     @Override
     public void updateFaultItem(final String name, final long currentLatency, final long notAvailableDuration) {
         FaultItem old = this.faultItemTable.get(name);
@@ -57,6 +63,12 @@ public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> 
         }
     }
 
+
+    /**
+     * Broker是否可用
+     * @param name 对象
+     * @return
+     */
     @Override
     public boolean isAvailable(final String name) {
         final FaultItem faultItem = this.faultItemTable.get(name);
@@ -66,13 +78,17 @@ public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> 
         return true;
     }
 
+    /**
+     * 移除Fault条目,意味着Broker重新参与路由计算
+     * @param name
+     */
     @Override
     public void remove(final String name) {
         this.faultItemTable.remove(name);
     }
 
     /**
-     * 选择一个相对优秀的对象
+     * 尝试从规避的Broker中选择一个相对优秀的对象
      * @return
      */
     @Override
@@ -114,15 +130,15 @@ public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> 
     class FaultItem implements Comparable<FaultItem> {
 
         /**
-         * 对象名
+         * 对象名，为BrokerName
          */
         private final String name;
         /**
-         * 延迟
+         * 本次消息发送延迟
          */
         private volatile long currentLatency;
         /**
-         * 开始可用时间
+         * 开始可用时间/故障规避开始时间
          */
         private volatile long startTimestamp;
 

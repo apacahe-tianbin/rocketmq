@@ -114,24 +114,29 @@ public class ScheduleMessageService extends ConfigManager {
     public void start() {
         if (started.compareAndSet(false, true)) {
             this.timer = new Timer("ScheduleMessageTimerThread", true);
+            //1. 根据支持的各种延迟级别，添加不同延迟时间的TimeTask
             for (Map.Entry<Integer, Long> entry : this.delayLevelTable.entrySet()) {
                 Integer level = entry.getKey();
                 Long timeDelay = entry.getValue();
+                //每一个延迟级别对应已经读取为普通消息的offset值
+                //这个offset的值代表每个级别的延迟队列已经转换为普通消息的位置）
                 Long offset = this.offsetTable.get(level);
                 if (null == offset) {
                     offset = 0L;
                 }
 
                 if (timeDelay != null) {
+                    //DeliverDelayedMessageTimerTask（每秒执行1次）
                     this.timer.schedule(new DeliverDelayedMessageTimerTask(level, offset), FIRST_DELAY_TIME);
                 }
             }
-
+            //2. 添加一个10s执行一次的TimeTask
             this.timer.scheduleAtFixedRate(new TimerTask() {
 
                 @Override
                 public void run() {
                     try {
+                        //ScheduleMessageService.this.persist()（每10秒是执行一次）
                         if (started.get()) ScheduleMessageService.this.persist();
                     } catch (Throwable e) {
                         log.error("scheduleAtFixedRate flush exception", e);
@@ -197,6 +202,8 @@ public class ScheduleMessageService extends ConfigManager {
         timeUnitTable.put("h", 1000L * 60 * 60);
         timeUnitTable.put("d", 1000L * 60 * 60 * 24);
 
+        //不同延时时间的字符串
+        //String levelString = "1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h"
         String levelString = this.defaultMessageStore.getMessageStoreConfig().getMessageDelayLevel();
         try {
             String[] levelArray = levelString.split(" ");
@@ -211,6 +218,7 @@ public class ScheduleMessageService extends ConfigManager {
                 }
                 long num = Long.parseLong(value.substring(0, value.length() - 1));
                 long delayTimeMillis = tu * num;
+                //存放延时级别与延时时长的对应关系
                 this.delayLevelTable.put(level, delayTimeMillis);
             }
         } catch (Exception e) {
@@ -261,6 +269,7 @@ public class ScheduleMessageService extends ConfigManager {
         }
 
         public void executeOnTimeup() {
+            //读取队列SCHEDULE_TOPIC_XXXX，其中不同的延迟级别对应不同的队列id（queueId=delayLevel-1）
             ConsumeQueue cq =
                 ScheduleMessageService.this.defaultMessageStore.findConsumeQueue(SCHEDULE_TOPIC,
                     delayLevel2QueueId(delayLevel));
@@ -274,6 +283,7 @@ public class ScheduleMessageService extends ConfigManager {
                         long nextOffset = offset;
                         int i = 0;
                         ConsumeQueueExt.CqExtUnit cqExtUnit = new ConsumeQueueExt.CqExtUnit();
+                        //循环读取延迟消息
                         for (; i < bufferCQ.getSize(); i += ConsumeQueue.CQ_STORE_UNIT_SIZE) {
                             long offsetPy = bufferCQ.getByteBuffer().getLong();
                             int sizePy = bufferCQ.getByteBuffer().getInt();
@@ -297,7 +307,7 @@ public class ScheduleMessageService extends ConfigManager {
                             nextOffset = offset + (i / ConsumeQueue.CQ_STORE_UNIT_SIZE);
 
                             long countdown = deliverTimestamp - now;
-
+                            //只有当延迟消息发送的时间在当前时间之前才处理，否则此消息应该延迟后再处
                             if (countdown <= 0) {
                                 MessageExt msgExt =
                                     ScheduleMessageService.this.defaultMessageStore.lookMessageByOffset(
@@ -351,10 +361,11 @@ public class ScheduleMessageService extends ConfigManager {
                                 return;
                             }
                         } // end of for
-
+                        //计算下一次读取延迟队列的offset，是定时任务下一次从该位置读取延时消息
                         nextOffset = offset + (i / ConsumeQueue.CQ_STORE_UNIT_SIZE);
                         ScheduleMessageService.this.timer.schedule(new DeliverDelayedMessageTimerTask(
                             this.delayLevel, nextOffset), DELAY_FOR_A_WHILE);
+                        //将下一次读取延迟队列的offset存放到一个缓存map中
                         ScheduleMessageService.this.updateOffset(this.delayLevel, nextOffset);
                         return;
                     } finally {
