@@ -95,7 +95,7 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
     private MessageModel messageModel = MessageModel.CLUSTERING;
 
     /**
-     * 根据消息进度从消息服务器拉取不到消息时重新计算i消费策略
+     * 根据消息进度从消息服务器拉取不到消息时重新计算消费策略
      * Consuming point on consumer booting.
      * </p>
      *
