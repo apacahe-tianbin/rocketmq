@@ -23,7 +23,7 @@ public class PullSysFlag {
     private final static int FLAG_SUSPEND = 0x1 << 1;
     //消息过滤机制为表达式，则设置该标记
     private final static int FLAG_SUBSCRIPTION = 0x1 << 2;
-    //消费过滤机制
+    //消费过滤机制，类过滤模式
     private final static int FLAG_CLASS_FILTER = 0x1 << 3;
     //
     private final static int FLAG_LITE_PULL_MESSAGE = 0x1 << 4;

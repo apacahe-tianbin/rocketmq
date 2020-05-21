@@ -577,21 +577,32 @@ public class DefaultMessageStore implements MessageStore {
         GetMessageResult getResult = new GetMessageResult();
 
         final long maxOffsetPy = this.commitLog.getMaxOffset();
-
+        //根据主题和队列ID查找
         ConsumeQueue consumeQueue = findConsumeQueue(topic, queueId);
         if (consumeQueue != null) {
+            //当前队列最小偏移量
             minOffset = consumeQueue.getMinOffsetInQueue();
+            //当前队列最大偏移量
             maxOffset = consumeQueue.getMaxOffsetInQueue();
 
+            //表示当前消费队列中没有任何消息
             if (maxOffset == 0) {
                 status = GetMessageStatus.NO_MESSAGE_IN_QUEUE;
+                //1.如果当前节点为主节点或offsetCheckInSlave为false，下次拉取偏移量仍然是offset
+                //2.如果当前节点为从节点并且offsetCheckInSlave为true,设置下次拉取偏移量为0
                 nextBeginOffset = nextOffsetCorrection(offset, 0);
+            //待拉取消息偏移量小于队列的起始偏移量
             } else if (offset < minOffset) {
                 status = GetMessageStatus.OFFSET_TOO_SMALL;
+                //1.如果当前节点为主节点或offsetCheckInSlave为false，下次拉取偏移量仍然是offset
+                //2.如果当前节点为从节点并且offsetCheckInSlave为true,设置下次拉取偏移量为[minOffset]
                 nextBeginOffset = nextOffsetCorrection(offset, minOffset);
+             //待拉取消息偏移量等于队列的起始偏移量
             } else if (offset == maxOffset) {
                 status = GetMessageStatus.OFFSET_OVERFLOW_ONE;
+                //下次拉取依然是offset
                 nextBeginOffset = nextOffsetCorrection(offset, offset);
+            //偏移量过量
             } else if (offset > maxOffset) {
                 status = GetMessageStatus.OFFSET_OVERFLOW_BADLY;
                 if (0 == minOffset) {

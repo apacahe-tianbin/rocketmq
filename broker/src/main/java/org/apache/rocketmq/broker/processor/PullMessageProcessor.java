@@ -77,6 +77,13 @@ public class PullMessageProcessor extends AsyncNettyRequestProcessor implements 
         this.brokerController = brokerController;
     }
 
+    /**
+     * 消费服务端Broker组装消息
+     * @param ctx
+     * @param request
+     * @return
+     * @throws RemotingCommandException
+     */
     @Override
     public RemotingCommand processRequest(final ChannelHandlerContext ctx,
         RemotingCommand request) throws RemotingCommandException {
