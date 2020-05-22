@@ -237,7 +237,7 @@ public abstract class RebalanceImpl {
 
     private void rebalanceByTopic(final String topic, final boolean isOrder) {
         switch (messageModel) {
-            case BROADCASTING: {
+            case BROADCASTING: {//广播
                 Set<MessageQueue> mqSet = this.topicSubscribeInfoTable.get(topic);
                 if (mqSet != null) {
                     boolean changed = this.updateProcessQueueTableInRebalance(topic, mqSet, isOrder);
@@ -254,8 +254,10 @@ public abstract class RebalanceImpl {
                 }
                 break;
             }
-            case CLUSTERING: {
+            case CLUSTERING: {//集群
+                //获取主题下的所有消费队列
                 Set<MessageQueue> mqSet = this.topicSubscribeInfoTable.get(topic);
+                //从broker中获取所有的消费者客户ID
                 List<String> cidAll = this.mQClientFactory.findConsumerIdList(topic, consumerGroup);
                 if (null == mqSet) {
                     if (!topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
@@ -270,7 +272,7 @@ public abstract class RebalanceImpl {
                 if (mqSet != null && cidAll != null) {
                     List<MessageQueue> mqAll = new ArrayList<MessageQueue>();
                     mqAll.addAll(mqSet);
-
+                    //排序
                     Collections.sort(mqAll);
                     Collections.sort(cidAll);
 
@@ -393,7 +395,7 @@ public abstract class RebalanceImpl {
                 }
             }
         }
-
+        //放入拉取请求
         this.dispatchPullRequest(pullRequestList);
 
         return changed;

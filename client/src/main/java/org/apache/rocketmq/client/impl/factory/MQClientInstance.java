@@ -238,11 +238,11 @@ public class MQClientInstance {
                     }
                     // Start request-response channel
                     this.mQClientAPIImpl.start();
-                    // Start various schedule tasks
+                    // Start various schedule tasks 同一线程池的任务,线程名称为MQClientFactoryScheduledThread
                     this.startScheduledTask();
-                    // Start pull service
+                    // Start pull service 拉取消息线程
                     this.pullMessageService.start();
-                    // Start rebalance service
+                    // Start rebalance service reblance线程
                     this.rebalanceService.start();
                     // Start push service
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
@@ -259,6 +259,7 @@ public class MQClientInstance {
 
     private void startScheduledTask() {
         if (null == this.clientConfig.getNamesrvAddr()) {
+            //获取nameserver地址，2分钟执行一次
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
                 @Override
@@ -271,7 +272,7 @@ public class MQClientInstance {
                 }
             }, 1000 * 10, 1000 * 60 * 2, TimeUnit.MILLISECONDS);
         }
-
+        //从nameserver获取最新的路由信息更新到缓存，30s执行一次
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -289,7 +290,9 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    //清除下线的broker列表，30s
                     MQClientInstance.this.cleanOfflineBroker();
+                    //发送心跳给broker，30s
                     MQClientInstance.this.sendHeartbeatToAllBrokerWithLock();
                 } catch (Exception e) {
                     log.error("ScheduledTask sendHeartbeatToAllBroker exception", e);
@@ -302,6 +305,7 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    //持久化消费进度,5s执行一次
                     MQClientInstance.this.persistAllConsumerOffset();
                 } catch (Exception e) {
                     log.error("ScheduledTask persistAllConsumerOffset exception", e);

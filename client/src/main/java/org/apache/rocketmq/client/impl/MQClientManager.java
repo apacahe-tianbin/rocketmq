@@ -48,7 +48,7 @@ public class MQClientManager {
 
         //IP+Instance+(unitName可选)
         String clientId = clientConfig.buildMQClientId();
-
+        //factoryTable存放的就是client的实例，key为clientId
         MQClientInstance instance = this.factoryTable.get(clientId);
         if (null == instance) {
             instance =

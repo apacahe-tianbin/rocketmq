@@ -94,6 +94,7 @@ public class PullMessageService extends ServiceThread {
         //stopped 为volite
         while (!this.isStopped()) {
             try {
+                //从阻塞队列pullRequestQueue中获取pullRequest
                 PullRequest pullRequest = this.pullRequestQueue.take();
                 this.pullMessage(pullRequest);
             } catch (InterruptedException ignored) {
