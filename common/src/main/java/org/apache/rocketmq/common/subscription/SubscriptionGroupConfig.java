@@ -20,9 +20,9 @@ package org.apache.rocketmq.common.subscription;
 import org.apache.rocketmq.common.MixAll;
 
 public class SubscriptionGroupConfig {
-
+    //消费组名
     private String groupName;
-
+    //是否允许消费；如果为false，消费组无法消费
     private boolean consumeEnable = true;
     private boolean consumeFromMinEnable = true;
 
