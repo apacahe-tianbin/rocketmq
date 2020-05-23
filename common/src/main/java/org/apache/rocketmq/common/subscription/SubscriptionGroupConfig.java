@@ -24,18 +24,19 @@ public class SubscriptionGroupConfig {
     private String groupName;
     //是否允许消费；如果为false，消费组无法消费
     private boolean consumeEnable = true;
+    //是否允许从队列最小偏移量开始消费
     private boolean consumeFromMinEnable = true;
-
+    //设置消费组是否能以广播模式消费，如果为false，则只能以集群模式消费
     private boolean consumeBroadcastEnable = true;
-
+    //重试队列个数，每个Broker上一个
     private int retryQueueNums = 1;
-
+    //消息最大重试次数
     private int retryMaxTimes = 16;
 
     private long brokerId = MixAll.MASTER_ID;
-
+    //如果消息阻塞(主),将转向该BrokerId的服务器上拉取消息
     private long whichBrokerWhenConsumeSlowly = 1;
-
+    //当消费发生变化时，是否立即进行消息队列重新负载
     private boolean notifyConsumerIdsChangedEnable = true;
 
     public String getGroupName() {
