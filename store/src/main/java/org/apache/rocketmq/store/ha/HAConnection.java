@@ -28,15 +28,22 @@ import org.apache.rocketmq.logging.InternalLoggerFactory;
 import org.apache.rocketmq.remoting.common.RemotingUtil;
 import org.apache.rocketmq.store.SelectMappedBufferResult;
 
+/**
+ * HA master服务端HA连接对象的的封装,与Broker从服务器的网络读写实现类
+ */
 public class HAConnection {
     private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     private final HAService haService;
     private final SocketChannel socketChannel;
+    //客户端连接地址
     private final String clientAddr;
+    //服务端向从服务器写数据服务类
     private WriteSocketService writeSocketService;
+    //服务端向从服务器读数据服务类
     private ReadSocketService readSocketService;
-
+    //从服务器请求拉取数据的偏移量
     private volatile long slaveRequestOffset = -1;
+    //从服务器反馈已拉取完的数据偏移量
     private volatile long slaveAckOffset = -1;
 
     public HAConnection(final HAService haService, final SocketChannel socketChannel) throws IOException {
@@ -78,12 +85,18 @@ public class HAConnection {
         return socketChannel;
     }
 
+    /**
+     * 网络读实现类
+     */
     class ReadSocketService extends ServiceThread {
         private static final int READ_MAX_BUFFER_SIZE = 1024 * 1024;
         private final Selector selector;
         private final SocketChannel socketChannel;
+        //网络读写缓冲区，默认1M
         private final ByteBuffer byteBufferRead = ByteBuffer.allocate(READ_MAX_BUFFER_SIZE);
+        // byteBuffer当前处理指针
         private int processPosition = 0;
+        //上次读取数据的时间戳
         private volatile long lastReadTimestamp = System.currentTimeMillis();
 
         public ReadSocketService(final SocketChannel socketChannel) throws IOException {
@@ -190,15 +203,22 @@ public class HAConnection {
         }
     }
 
+    /**
+     * 网络写实现类
+     */
     class WriteSocketService extends ServiceThread {
         private final Selector selector;
         private final SocketChannel socketChannel;
-
+        //消息头长度,消息物理偏移量+消息长度
         private final int headerSize = 8 + 4;
         private final ByteBuffer byteBufferHeader = ByteBuffer.allocate(headerSize);
+        //下次传输的物理偏移量
         private long nextTransferFromWhere = -1;
+        //根据偏移量查找消息的结果
         private SelectMappedBufferResult selectMappedBufferResult;
+        //上一次数据是否传输完毕
         private boolean lastWriteOver = true;
+        //上一次写入的时间戳
         private long lastWriteTimestamp = System.currentTimeMillis();
 
         public WriteSocketService(final SocketChannel socketChannel) throws IOException {
