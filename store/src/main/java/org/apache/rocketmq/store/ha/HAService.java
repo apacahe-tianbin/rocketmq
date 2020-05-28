@@ -40,6 +40,9 @@ import org.apache.rocketmq.remoting.common.RemotingUtil;
 import org.apache.rocketmq.store.CommitLog;
 import org.apache.rocketmq.store.DefaultMessageStore;
 
+/**
+ * 主从同步核心实现类
+ */
 public class HAService {
     private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
 
@@ -154,6 +157,7 @@ public class HAService {
     }
 
     /**
+     * HA master监听客户端连接实现类
      * Listens to slave connections to create {@link HAConnection}.
      */
     class AcceptSocketService extends ServiceThread {
@@ -171,7 +175,9 @@ public class HAService {
          * @throws Exception If fails.
          */
         public void beginAccept() throws Exception {
+            //服务端socket通道,基于NIO
             this.serverSocketChannel = ServerSocketChannel.open();
+            //事件选择器，基于NIO
             this.selector = RemotingUtil.openSelector();
             this.serverSocketChannel.socket().setReuseAddress(true);
             this.serverSocketChannel.socket().bind(this.socketAddressListen);
@@ -248,6 +254,7 @@ public class HAService {
     }
 
     /**
+     * 主从同步通知实现类
      * GroupTransferService Service
      */
     class GroupTransferService extends ServiceThread {
@@ -325,17 +332,29 @@ public class HAService {
         }
     }
 
+    /**
+     * HA client端实现类
+     */
     class HAClient extends ServiceThread {
+        //Socket读缓冲区
         private static final int READ_MAX_BUFFER_SIZE = 1024 * 1024 * 4;
+        //master地址
         private final AtomicReference<String> masterAddress = new AtomicReference<>();
+        //slave向Master发起主从同步的拉取偏移量
         private final ByteBuffer reportOffset = ByteBuffer.allocate(8);
+        //网络传输通道
         private SocketChannel socketChannel;
+        //NIO事件选择器
         private Selector selector;
+        //上一次写入时间戳
         private long lastWriteTimestamp = System.currentTimeMillis();
-
+        //反馈当前slave的复制进度,commitLog文件最大偏移量
         private long currentReportedOffset = 0;
+        //本次已处理读缓冲区的指针
         private int dispatchPosition = 0;
+        //读缓冲区，默认为4M
         private ByteBuffer byteBufferRead = ByteBuffer.allocate(READ_MAX_BUFFER_SIZE);
+        //读缓冲区备份，域BufferRead进行交换
         private ByteBuffer byteBufferBackup = ByteBuffer.allocate(READ_MAX_BUFFER_SIZE);
 
         public HAClient() throws IOException {

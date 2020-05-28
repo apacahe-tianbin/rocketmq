@@ -145,7 +145,9 @@ public class FilterServerManager {
     }
 
     static class FilterServerInfo {
+        //filterServer服务器地址
         private String filterServerAddr;
+        //filterServer上次发送心跳包时间
         private long lastUpdateTimestamp;
 
         public String getFilterServerAddr() {
