@@ -144,8 +144,10 @@ public class BrokerController {
     private final List<SendMessageHook> sendMessageHookList = new ArrayList<SendMessageHook>();
     private final List<ConsumeMessageHook> consumeMessageHookList = new ArrayList<ConsumeMessageHook>();
     private MessageStore messageStore;
+
     private RemotingServer remotingServer;
     private RemotingServer fastRemotingServer;
+
     private TopicConfigManager topicConfigManager;
     private ExecutorService sendMessageExecutor;
     private ExecutorService pullMessageExecutor;
@@ -261,7 +263,9 @@ public class BrokerController {
         result = result && this.messageStore.load();
 
         if (result) {
+            //1 remotingserver监听listener端口，默认10911
             this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.clientHousekeepingService);
+            //2 fastRomotingServer监听listenPort-2端口,默认10899
             NettyServerConfig fastConfig = (NettyServerConfig) this.nettyServerConfig.clone();
             fastConfig.setListenPort(nettyServerConfig.getListenPort() - 2);
             this.fastRemotingServer = new NettyRemotingServer(fastConfig, this.clientHousekeepingService);
@@ -561,6 +565,7 @@ public class BrokerController {
         this.fastRemotingServer.registerProcessor(RequestCode.CONSUMER_SEND_MSG_BACK, sendProcessor, this.sendMessageExecutor);
         /**
          * PullMessageProcessor
+         * 注册到了remotingServer中，没有注册到fastRometingServer
          */
         this.remotingServer.registerProcessor(RequestCode.PULL_MESSAGE, this.pullMessageProcessor, this.pullMessageExecutor);
         this.pullMessageProcessor.registerConsumeMessageHook(consumeMessageHookList);

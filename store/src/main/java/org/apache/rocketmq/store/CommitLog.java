@@ -339,6 +339,7 @@ public class CommitLog {
 
                 // Timing message processing
                 {
+                    //如果消息需要投递到延迟主题SCHEDULE_TOPIC_XXXX
                     String t = propertiesMap.get(MessageConst.PROPERTY_DELAY_TIME_LEVEL);
                     if (ScheduleMessageService.SCHEDULE_TOPIC.equals(topic) && t != null) {
                         int delayLevel = Integer.parseInt(t);
@@ -347,6 +348,7 @@ public class CommitLog {
                             delayLevel = this.defaultMessageStore.getScheduleMessageService().getMaxDelayLevel();
                         }
 
+                        //如果延迟级别大于0，计算目标投递时间，并将其当做tag哈希值
                         if (delayLevel > 0) {
                             tagsCode = this.defaultMessageStore.getScheduleMessageService().computeDeliverTimestamp(delayLevel,
                                 storeTimestamp);
@@ -796,15 +798,19 @@ public class CommitLog {
         if (tranType == MessageSysFlag.TRANSACTION_NOT_TYPE
             || tranType == MessageSysFlag.TRANSACTION_COMMIT_TYPE) {
             // Delay Delivery
+            //如果是延迟消息
             if (msg.getDelayTimeLevel() > 0) {
                 //延时消息处理逻辑
+                //如果设置的级别超过了最大级别,重置延迟级别
                 if (msg.getDelayTimeLevel() > this.defaultMessageStore.getScheduleMessageService().getMaxDelayLevel()) {
                     //如果延时级别大于最大值，则置为最大值
                     msg.setDelayTimeLevel(this.defaultMessageStore.getScheduleMessageService().getMaxDelayLevel());
                 }
                 //一个名为“SCHEDULE_TOPIC_XXXX”的特殊topic常量名
+                //修改Topic的投递目标为内部主题SCHEDULE_TOPIC_XXXX
                 topic = ScheduleMessageService.SCHEDULE_TOPIC;
                 //队列号为delayLevel - 1(延时级别减1
+                //根据delayLevel，确定将消息投递到SCHEDULE_TOPIC_XXXX内部的哪个队列中
                 queueId = ScheduleMessageService.delayLevel2QueueId(msg.getDelayTimeLevel());
 
                 // Backup real topic, queueId
@@ -812,7 +818,7 @@ public class CommitLog {
                 MessageAccessor.putProperty(msg, MessageConst.PROPERTY_REAL_TOPIC, msg.getTopic());
                 MessageAccessor.putProperty(msg, MessageConst.PROPERTY_REAL_QUEUE_ID, String.valueOf(msg.getQueueId()));
                 msg.setPropertiesString(MessageDecoder.messageProperties2String(msg.getProperties()));
-                //重新设置消息的topic为“SCHEDULE_TOPIC_XXXX”
+                //重新设置消息的topic为“SCHEDULE_TOPIC_XXXX”和queueId
                 msg.setTopic(topic);
                 msg.setQueueId(queueId);
             }

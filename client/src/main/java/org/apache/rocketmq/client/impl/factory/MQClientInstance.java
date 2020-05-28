@@ -331,9 +331,11 @@ public class MQClientInstance {
     }
 
     public void updateTopicRouteInfoFromNameServer() {
+        //1.需要更新路由信息的Topic集合
         Set<String> topicList = new HashSet<String>();
 
         // Consumer
+        //2 添加消费者需要使用到的Topic到集合中
         {
             Iterator<Entry<String, MQConsumerInner>> it = this.consumerTable.entrySet().iterator();
             while (it.hasNext()) {
@@ -350,7 +352,7 @@ public class MQClientInstance {
             }
         }
 
-        // Producer
+        // Producer 添加生产者需要使用到的topic到集合中
         {
             Iterator<Entry<String, MQProducerInner>> it = this.producerTable.entrySet().iterator();
             while (it.hasNext()) {
@@ -363,6 +365,7 @@ public class MQClientInstance {
             }
         }
 
+        //逐一从nameServer更新每个topic的路由信息
         for (String topic : topicList) {
             this.updateTopicRouteInfoFromNameServer(topic);
         }

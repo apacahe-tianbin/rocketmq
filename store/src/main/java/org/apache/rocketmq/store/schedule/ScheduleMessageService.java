@@ -119,9 +119,12 @@ public class ScheduleMessageService extends ConfigManager {
 
     public void start() {
         if (started.compareAndSet(false, true)) {
+            //创建定时器Timer
             this.timer = new Timer("ScheduleMessageTimerThread", true);
             //1. 根据支持的各种延迟级别，添加不同延迟时间的TimeTask
+            //迭代每个延迟级别:delayLevelTable是一个map，记录了每个延迟级别对应的延迟时间
             for (Map.Entry<Integer, Long> entry : this.delayLevelTable.entrySet()) {
+                //获得每个延迟级别的level和对应的延迟时间
                 Integer level = entry.getKey();
                 Long timeDelay = entry.getValue();
                 //每一个延迟级别对应已经读取为普通消息的offset值
@@ -130,7 +133,7 @@ public class ScheduleMessageService extends ConfigManager {
                 if (null == offset) {
                     offset = 0L;
                 }
-
+                //针对每个级别创建一个对应的TimerTask
                 if (timeDelay != null) {
                     //DeliverDelayedMessageTimerTask（每秒执行1次）
                     this.timer.schedule(new DeliverDelayedMessageTimerTask(level, offset), FIRST_DELAY_TIME);
@@ -401,6 +404,7 @@ public class ScheduleMessageService extends ConfigManager {
             MessageAccessor.setProperties(msgInner, msgExt.getProperties());
 
             TopicFilterType topicFilterType = MessageExt.parseTopicFilterType(msgInner.getSysFlag());
+            //重新计算tag的哈希值
             long tagsCodeValue =
                 MessageExtBrokerInner.tagsString2tagsCode(topicFilterType, msgInner.getTags());
             msgInner.setTagsCode(tagsCodeValue);
